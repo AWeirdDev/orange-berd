@@ -1,0 +1,25 @@
+[package]
+name = "orange-berd"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+async-trait = "0.1.88"
+dashmap = "6.1.0"
+dotenvy = "0.15.7"
+reqwest = "0.12.20"
+rustypipe = "0.11.4"
+songbird = { version = "0.5.0", features = ["twilight"] }
+tokio = { version = "1.45.1", features = ["rt", "rt-multi-thread", "macros"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+twilight-gateway = "0.16.0"
+twilight-http = "0.16.0"
+twilight-interactions = "0.16.2"
+twilight-model = "0.16.0"
+twilight-util = { version = "0.16.0", features = ["builder"] }
+
+[dependencies.symphonia]
+version = "0.5"
+features = ["aac", "mp3", "isomp4", "alac"] # ...as well as any extras you need!

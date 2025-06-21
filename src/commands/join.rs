@@ -27,6 +27,10 @@ impl HandleCommand for JoinCommand {
         state: Arc<State>
     ) -> anyhow::Result<()> {
         let ic = CommandInteractionContext::new(&state.http, &interaction);
+        let Some(guild) = interaction.guild_id else {
+            ic.respond("Hmm, we're not in a server!").await?;
+            return Ok(());
+        };
 
         let channel_id = {
             if let Some(channel) = self.channel.take() {
@@ -36,9 +40,7 @@ impl HandleCommand for JoinCommand {
                 let ch_id = if let Some(vs) = state.cache.get_voice_state(&user_id) {
                     vs.channel_id
                 } else {
-                    let vs = state.http
-                        .user_voice_state(interaction.guild_id.unwrap(), user_id).await?
-                        .model().await?;
+                    let vs = state.http.user_voice_state(guild, user_id).await?.model().await?;
                     state.cache.record_voice_state(user_id, vs);
                     state.cache.get_voice_state(&user_id).unwrap().channel_id
                 };
@@ -52,7 +54,7 @@ impl HandleCommand for JoinCommand {
         };
 
         ic.defer(false).await?;
-        if let Err(e) = state.songbird.join(interaction.guild_id.unwrap(), channel_id).await {
+        if let Err(e) = state.songbird.join(guild, channel_id).await {
             if e.should_reconnect_driver() {
                 ic
                     .create_followup(&interaction.token)

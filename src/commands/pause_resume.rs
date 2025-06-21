@@ -46,7 +46,10 @@ impl HandleCommand for ResumeCommand {
 async fn handler(interaction: Interaction, state: Arc<State>) -> anyhow::Result<()> {
     let ic = CommandInteractionContext::new(&state.http, &interaction);
 
-    let guild = interaction.guild_id.unwrap();
+    let Some(guild) = interaction.guild_id else {
+        ic.respond("Hmm, we're not in a server!").await?;
+        return Ok(());
+    };
 
     if let Some(rf) = state.guild_data.get(&guild) {
         let info = rf.handle.get_info().await?;

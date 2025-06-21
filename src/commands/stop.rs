@@ -23,7 +23,10 @@ impl HandleCommand for StopCommand {
     ) -> anyhow::Result<()> {
         let ic = CommandInteractionContext::new(&state.http, &interaction);
 
-        let guild = interaction.guild_id.unwrap();
+        let Some(guild) = interaction.guild_id else {
+            ic.respond("Hmm, we're not in a server!").await?;
+            return Ok(());
+        };
         if let Some(rf) = state.guild_data.get(&guild) {
             rf.handle.stop()?;
         } else {

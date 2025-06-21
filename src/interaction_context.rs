@@ -9,6 +9,22 @@ use twilight_model::{
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
+pub trait ToInteractionResponseData {
+    fn into_ird(self) -> InteractionResponseData;
+}
+
+impl ToInteractionResponseData for InteractionResponseData {
+    fn into_ird(self) -> InteractionResponseData {
+        self
+    }
+}
+
+impl ToInteractionResponseData for &str {
+    fn into_ird(self) -> InteractionResponseData {
+        InteractionResponseDataBuilder::new().content(self).build()
+    }
+}
+
 pub(crate) struct CommandInteractionContext<'a> {
     pub(crate) client: InteractionClient<'a>,
     pub(crate) interaction: &'a Interaction,
@@ -44,13 +60,13 @@ impl<'a> CommandInteractionContext<'a> {
         Ok(())
     }
 
-    pub(crate) async fn respond(&self, data: InteractionResponseData) -> Result<()> {
+    pub(crate) async fn respond<K: ToInteractionResponseData>(&self, data: K) -> Result<()> {
         self.client.create_response(
             self.interaction.id,
             &self.interaction.token,
             &(InteractionResponse {
                 kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(data),
+                data: Some(data.into_ird()),
             })
         ).await?;
 

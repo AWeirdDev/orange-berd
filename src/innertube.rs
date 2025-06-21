@@ -1,6 +1,6 @@
 use anyhow::Result;
 use reqwest::header::HeaderMap;
-use rustypipe::{ client::RustyPipe, model::VideoItem, param::StreamFilter };
+use rustypipe::{ client::RustyPipe, model::MusicItem, param::StreamFilter };
 use songbird::input::{
     core::io::MediaSource,
     AudioStream,
@@ -26,33 +26,35 @@ impl InnerTube {
     pub(crate) async fn search<K: AsRef<str> + std::fmt::Debug>(
         &self,
         q: K
-    ) -> Result<Vec<PlayableAudio>> {
-        let mut items = self.pipe.query().search::<VideoItem, _>(q).await?.items;
+    ) -> Result<Vec<YouTubeAudio>> {
+        let mut items = self.pipe.query().music_search_main(q).await?.items;
 
         let mut results = vec![];
         for item in items.items.drain(..) {
-            let player = self.pipe.query().player(item.id).await?;
-            let details = &player.details;
+            if let MusicItem::Track(track) = item {
+                let player = self.pipe.query().player(track.id).await?;
+                let details = &player.details;
 
-            let stream = player.select_audio_stream(&StreamFilter::default()).unwrap();
-            let s = stream.url.clone();
-            let size = stream.size;
-            results.push(
-                PlayableAudio::new(s, size, AuxMetadata {
-                    track: details.name.clone(),
-                    artist: details.channel_name.clone(),
-                    album: None,
-                    date: None,
-                    channels: None,
-                    channel: None,
-                    start_time: None,
-                    duration: None,
-                    sample_rate: None,
-                    source_url: None,
-                    title: None,
-                    thumbnail: None,
-                })
-            );
+                let stream = player.select_audio_stream(&StreamFilter::default()).unwrap();
+                let s = stream.url.clone();
+                let size = stream.size;
+                results.push(
+                    YouTubeAudio::new(s, size, AuxMetadata {
+                        track: details.name.clone(),
+                        artist: details.channel_name.clone(),
+                        album: None,
+                        date: None,
+                        channels: None,
+                        channel: None,
+                        start_time: None,
+                        duration: None,
+                        sample_rate: None,
+                        source_url: None,
+                        title: None,
+                        thumbnail: None,
+                    })
+                );
+            }
         }
 
         Ok(results)
@@ -60,20 +62,20 @@ impl InnerTube {
 }
 
 #[derive(Debug)]
-pub(crate) struct PlayableAudio {
+pub(crate) struct YouTubeAudio {
     url: String,
     size: u64,
     metadata: Option<AuxMetadata>,
 }
 
-impl PlayableAudio {
+impl YouTubeAudio {
     pub(crate) fn new(url: String, size: u64, metadata: AuxMetadata) -> Self {
         Self { url, size, metadata: Some(metadata) }
     }
 }
 
 #[async_trait::async_trait]
-impl Compose for PlayableAudio {
+impl Compose for YouTubeAudio {
     fn create(
         &mut self
     ) -> std::result::Result<
@@ -106,8 +108,8 @@ impl Compose for PlayableAudio {
     }
 }
 
-impl From<PlayableAudio> for Input {
-    fn from(val: PlayableAudio) -> Self {
+impl From<YouTubeAudio> for Input {
+    fn from(val: YouTubeAudio) -> Self {
         Input::Lazy(Box::new(val))
     }
 }

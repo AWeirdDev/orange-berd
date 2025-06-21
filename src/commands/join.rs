@@ -4,7 +4,6 @@ use async_trait::async_trait;
 
 use twilight_interactions::command::{ CreateCommand, CommandModel };
 use twilight_model::application::interaction::{ Interaction, InteractionChannel };
-use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::{
     commands::traits::HandleCommand,
@@ -45,11 +44,7 @@ impl HandleCommand for JoinCommand {
                 };
 
                 if ch_id.is_none() {
-                    ic.respond(
-                        InteractionResponseDataBuilder::new()
-                            .content("You're not connected to a voice channel!")
-                            .build()
-                    ).await?;
+                    ic.respond("You're not connected to a voice channel!").await?;
                     return Ok(());
                 }
                 ch_id.unwrap()
@@ -60,13 +55,13 @@ impl HandleCommand for JoinCommand {
         if let Err(e) = state.songbird.join(interaction.guild_id.unwrap(), channel_id).await {
             if e.should_reconnect_driver() {
                 ic
-                    .create_followup(&ic.interaction.token)
+                    .create_followup(&interaction.token)
                     .content(
                         "It seems like I cannot join the voice channel for now, but this failure can be reattempted. You can use the `/join` command again."
                     ).await?;
             } else if e.should_leave_server() {
                 ic
-                    .create_followup(&ic.interaction.token)
+                    .create_followup(&interaction.token)
                     .content(
                         "Oh, no... it seems like Discord's voice gateway state isn't consistent right now, we should probably retry later."
                     ).await?;
@@ -76,7 +71,7 @@ impl HandleCommand for JoinCommand {
         }
 
         ic
-            .create_followup(&ic.interaction.token)
+            .create_followup(&interaction.token)
             .content(&format!("Joined <#{}>!", channel_id)).await?;
 
         Ok(())

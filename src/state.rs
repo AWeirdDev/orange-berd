@@ -11,10 +11,17 @@ use twilight_model::id::{ marker::GuildMarker, Id };
 
 use crate::{ cache::Cache, innertube::YouTubeAudio };
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum RepeatMode {
+    No,
+    Single,
+}
+
 #[derive(Debug)]
-pub struct GuildData {
+pub(crate) struct GuildData {
     pub(crate) queue: VecDeque<YouTubeAudio>,
     pub(crate) handle: TrackHandle,
+    pub(crate) repeat: RepeatMode,
 }
 
 #[derive(Debug)]
@@ -39,7 +46,11 @@ impl State {
         if let Some(mut data) = self.guild_data.get_mut(&guild) {
             data.handle = handle;
         } else {
-            self.guild_data.insert(guild, GuildData { queue: VecDeque::new(), handle });
+            self.guild_data.insert(guild, GuildData {
+                queue: VecDeque::new(),
+                handle,
+                repeat: RepeatMode::No,
+            });
         }
     }
 

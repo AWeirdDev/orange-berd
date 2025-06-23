@@ -9,6 +9,7 @@ use crate::{
         join::JoinCommand,
         pause_resume::{ PauseCommand, ResumeCommand },
         play::PlayCommand,
+        repeat::RepeatCommand,
         stop::StopCommand,
         traits::HandleCommand,
     },
@@ -20,6 +21,7 @@ mod join;
 mod play;
 mod stop;
 mod pause_resume;
+mod repeat;
 
 #[derive(CreateCommand, CommandModel)]
 #[command(name = "berd", desc = "The Berd music bot.")]
@@ -29,6 +31,7 @@ pub(crate) enum BerdCommands {
     #[command(name = "stop")] Stop(StopCommand),
     #[command(name = "pause")] Pause(PauseCommand),
     #[command(name = "resume")] Resume(ResumeCommand),
+    #[command(name = "repeat")] Repeat(RepeatCommand),
 }
 
 impl BerdCommands {
@@ -44,6 +47,7 @@ impl BerdCommands {
             Self::Stop(mut stop) => stop.handle_mut(interaction, state).await,
             Self::Pause(mut pause) => pause.handle_mut(interaction, state).await,
             Self::Resume(mut resume) => resume.handle_mut(interaction, state).await,
+            Self::Repeat(mut repeat) => repeat.handle_mut(interaction, state).await,
         }
     }
 }
